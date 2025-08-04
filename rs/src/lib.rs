@@ -21,7 +21,7 @@ pub fn sort_by<T, F: FnMut(&T, &T) -> Ordering>(v: &mut [T], mut compare: F) {
     sort_common(v, &mut |x, y| compare(x, y) == Ordering::Less);
 }
 
-/// Sort `v` with a key extraction function.
+/// Sort `v` with a key extraction function `f`.
 #[inline(always)]
 pub fn sort_by_key<T, K: Ord, F: FnMut(&T) -> K>(v: &mut [T], mut f: F) {
     sort_common(v, &mut |x, y| f(x).lt(&f(y)));
