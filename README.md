@@ -7,8 +7,6 @@ average     worst       best    space   stable
 n log n     n log n     n       1       ✓
 ```
 
----
-
 ### Visualization
 
 Preliminary visualizations are done with [ArrayV](https://github.com/Gaming32/ArrayV). Various input sizes and patterns are shown.
