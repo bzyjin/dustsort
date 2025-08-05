@@ -223,7 +223,7 @@ pub unsafe fn sort<T, F: Less<T>>(s: *mut T, n: usize, less: &mut F) {
 
         if buf.len < ideal {
             let tmp_len = buf.len;
-            buf.batch_find_keys(s, s.add(head), ideal, less);
+            buf.block_find_keys(s, s.add(head), ideal, less);
             head -= buf.len - tmp_len;
         }
 
@@ -244,7 +244,7 @@ pub unsafe fn sort<T, F: Less<T>>(s: *mut T, n: usize, less: &mut F) {
     // Collect distinct keys
     while l > 0 {
         let len = (l - 1) % run + 1;
-        buf.batch_find_keys(s.add(l - len), s.add(l), ideal, less);
+        buf.block_find_keys(s.add(l - len), s.add(l), ideal, less);
         l -= len;
 
         if buf.len == ideal {

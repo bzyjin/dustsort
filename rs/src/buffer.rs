@@ -88,7 +88,7 @@ impl<T> Buffer<T> {
 
     /// Search `s..i` from the right to identify unique keys, stopping at `ideal` keys. The range is
     /// guaranteed to be sorted, so we compare values efficiently with a virtual merge operation.
-    pub unsafe fn batch_find_keys<F: Less<T>>(
+    pub unsafe fn block_find_keys<F: Less<T>>(
         &mut self,
         s: *mut T,
         mut i: *mut T,
