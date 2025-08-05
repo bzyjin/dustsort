@@ -11,6 +11,8 @@ pub unsafe fn next_non_desc_run<T, F: Less<T>>(s: *mut T, n: usize, less: &mut F
 }
 
 /// Construct the next longest run starting at `s` with max length `n`.
+///
+/// Return the length of the run.
 pub unsafe fn next_sorted_run<T, F: Less<T>>(s: *mut T, n: usize, less: &mut F) -> usize {
     // Scan for initial non-descending run
     let mut i = next_non_desc_run(s, n, less);
