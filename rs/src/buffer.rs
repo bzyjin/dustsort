@@ -1,7 +1,7 @@
 use crate::{
     dust::insert_sort,
     util::{
-        insert_left, insert_right, ptr_sub, rotate, search_left, search_right, cycle_swap, Less,
+        cycle_swap, insert_left, insert_right, ptr_sub, rotate, search_left, search_right, Less,
     },
 };
 
