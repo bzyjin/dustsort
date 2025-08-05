@@ -122,7 +122,7 @@ pub unsafe fn rotate<T>(mut s: *mut T, mut n1: usize, mut n2: usize) {
 
 /// Return the value `i` in `0..=n` such that for all `j` in `0..i`, `f(j)` and for all `j` in
 /// `i..n`, `!f(j)`. The caller guarantees `f` is partitioned in such a manner.
-pub fn lower_bound(mut n: usize, mut f: impl FnMut(usize) -> bool) -> usize {
+fn lower_bound(mut n: usize, mut f: impl FnMut(usize) -> bool) -> usize {
     let mut i = 0;
 
     while n > 0 {
