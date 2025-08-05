@@ -10,9 +10,7 @@ use crate::{
     },
 };
 
-/// Swap two regions starting with `a` and `b` and ending before `a + cnt` and `b + cnt`
-///
-/// The relative order of the region starting at `a` is not preserved.
+/// Deposit the remaining elements `src..src + cnt` into `dst..dst + cnt` to complete a merge.
 unsafe fn end_merge<T>(dst: *mut T, src: *mut T, cnt: usize) {
     if dst != src {
         cycle_swap(dst, src, cnt);
