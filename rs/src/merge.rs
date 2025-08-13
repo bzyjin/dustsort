@@ -311,11 +311,15 @@ pub unsafe fn merge_in_place<T, F: Less<T>>(
         // Reduce case to (1) left or (2) right merge
         if n2 < n1 {
             merge_lazy(s.add(n1), rad, n2 - rad, less);
-            (n1, n2) = (n1 - rad, rad);
+
+            n1 -= rad;
+            n2 = rad;
         } else {
             merge_lazy(s, n1 - rad, rad, less);
+
             s = s.add(n1);
-            (n1, n2) = (rad, n2 - rad);
+            n1 = rad;
+            n2 -= rad;
         }
     }
 }
