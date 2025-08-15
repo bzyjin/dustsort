@@ -21,7 +21,7 @@ In fact, one paper ([pdf](https://users.informatik.uni-halle.de/~ahyjb/sort.pdf)
 
 >_Does there [exist] a stable in-place sorting algorithm, which needs only n log n + O(n) comparisons and only O(n log n) transports?_
 
-The answer is **yes**. If we ignore the aforementioned key collection cost, GrailSort's block merging routine achieves these bounds; dustsort follows the same routine but introduces a key collection algorithm that needs no more than `O(n)` comparisons and `O(n)` writes. An in-depth description of the entire sorting routine, including this algorithm, is being written.
+The answer is **yes**. If we ignore the aforementioned key collection cost, GrailSort's block merging routine achieves these bounds; dustsort follows the same routine but introduces a key collection algorithm that needs no more than `O(n)` comparisons and `O(n)` writes.
 
 Furthermore, the Zig standard library uses WikiSort at the time of writing. GrailSort was also investigated in the past, since both are stable and in-place. Due to its adaptivity and better performance guarantees, dustsort may be a future candidate.
 
