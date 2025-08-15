@@ -91,7 +91,7 @@ pub unsafe fn binary_merge_right<T, F: Less<T>>(
     n2: usize,
     mut dst: *mut T,
     less: &mut F,
-) -> usize {
+) {
     let gap = (n1 + n2 - 1) / n1;
     let mut bucket = (n2 + gap - 1) % gap;
 
@@ -132,8 +132,6 @@ pub unsafe fn binary_merge_right<T, F: Less<T>>(
     drop(hole);
     let src = conditional(s1.add(i1), s2.add(i2), i2 < n2);
     end_merge(dst, src, (n1 - i1) + (n2 - i2));
-
-    i1 + i2
 }
 
 /// Merge runs `s1..s1 + n1` and `s2..s2 + n2` into `dst..dst + n1 + n2` using a binary leftwards
