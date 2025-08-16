@@ -10,13 +10,6 @@ use crate::{
     },
 };
 
-/// Deposit the remaining elements `src..src + cnt` into `dst..dst + cnt` to complete a merge.
-unsafe fn end_merge<T>(dst: *mut T, src: *mut T, cnt: usize) {
-    if dst != src {
-        cycle_swap(dst, src, cnt);
-    }
-}
-
 /// Merge runs `s1..s1 + n1` and `s2..s2 + n2` into `dst..dst + n1 + n2` using a classic rightwards
 /// merge.
 ///
@@ -45,8 +38,12 @@ pub unsafe fn merge_right<T, F: Less<T>>(
     }
 
     drop(hole);
+
     let src = conditional(s1.add(i1), s2.add(i2), i2 < n2);
-    end_merge(dst, src, (n1 - i1) + (n2 - i2));
+
+    if dst != src {
+        cycle_swap(dst, src, (n1 - i1) + (n2 - i2));
+    }
 
     i1 + i2
 }
@@ -77,14 +74,17 @@ pub unsafe fn merge_left<T, F: Less<T>>(
     }
 
     drop(hole);
-    end_merge(dst, conditional(s1, s2, n2 > 0), n1 | n2);
+
+    let src = conditional(s1, s2, n2 > 0);
+
+    if dst != src {
+        cycle_swap(dst, src, n1 | n2);
+    }
 }
 
-/// Merge runs `s1..s1 + n1` and `s2..s2 + n2` into `dst..dst + n1 + n2` using a binary rightwards
-/// merge.
-///
-/// Return the number of elements merged in the loop.
-pub unsafe fn binary_merge_right<T, F: Less<T>>(
+/// Merge runs `s1..s1 + n1` and `s2..s2 + n2` into `dst..dst + n1 + n2` using a rightwards merge
+/// with exponential search.
+pub unsafe fn exponential_merge_right<T, F: Less<T>>(
     s1: *mut T,
     n1: usize,
     s2: *mut T,
@@ -92,51 +92,43 @@ pub unsafe fn binary_merge_right<T, F: Less<T>>(
     mut dst: *mut T,
     less: &mut F,
 ) {
-    let gap = (n1 + n2 - 1) / n1;
-    let mut bucket = (n2 + gap - 1) % gap;
-
     let mut i1 = 0;
     let mut i2 = 0;
-    let mut f2 = search_left(s2, bucket + 1, s1, less);
 
     let mut tmp = MaybeUninit::uninit();
     let mut hole = Hole::new(tmp.as_mut_ptr(), tmp.as_ptr());
 
-    while i2 < n2 {
-        if i2 < f2 {
+    while i1 < n1 && i2 < n2 {
+        let mut d = 0;
+
+        while i2 + d < n2 && less(&*s2.add(i2 + d), &*s1.add(i1)) {
+            d = d * 2 + 1;
+        }
+
+        let mut r = i2 + (d + 1) / 2;
+        r += search_left(s2.add(r), usize::min(i2 + d, n2) - r, s1.add(i1), less);
+
+        while i2 < r {
             hole.cycle(s2.add(i2), dst);
             dst = dst.add(1);
             i2 += 1;
-            continue;
         }
 
-        if i2 > bucket {
-            bucket += gap;
-        } else {
-            hole.cycle(s1.add(i1), dst);
-            dst = dst.add(1);
-            i1 += 1;
-
-            if i1 == n1 {
-                break;
-            }
-        }
-
-        f2 = bucket + 1;
-
-        if !less(&*s2.add(bucket), &*s1.add(i1)) {
-            f2 = i2 + search_left(s2.add(i2), bucket - i2, s1.add(i1), less);
-        }
+        hole.cycle(s1.add(i1), dst);
+        dst = dst.add(1);
+        i1 += 1;
     }
 
     drop(hole);
-    let src = conditional(s1.add(i1), s2.add(i2), i2 < n2);
-    end_merge(dst, src, (n1 - i1) + (n2 - i2));
+
+    if i1 < n1 {
+        cycle_swap(dst, s1.add(i1), n1 - i1);
+    }
 }
 
-/// Merge runs `s1..s1 + n1` and `s2..s2 + n2` into `dst..dst + n1 + n2` using a binary leftwards
-/// merge.
-pub unsafe fn binary_merge_left<T, F: Less<T>>(
+/// Merge runs `s1..s1 + n1` and `s2..s2 + n2` into `dst..dst + n1 + n2` using a leftwards merge
+/// with exponential search.
+pub unsafe fn exponential_merge_left<T, F: Less<T>>(
     s1: *mut T,
     mut n1: usize,
     s2: *mut T,
@@ -144,44 +136,36 @@ pub unsafe fn binary_merge_left<T, F: Less<T>>(
     dst: *mut T,
     less: &mut F,
 ) {
-    let gap = (n1 + n2 - 1) / n2;
-    let mut bucket = (n1 - 1) / gap * gap;
-
-    let mut dst_rev = dst.add(n1 + n2);
-    let mut f1 = bucket + search_right(s1.add(bucket), n1 - bucket, s2.add(n2 - 1), less);
-
     let mut tmp = MaybeUninit::uninit();
     let mut hole = Hole::new(tmp.as_mut_ptr(), tmp.as_ptr());
+    let mut dst_rev = dst.add(n1 + n2);
 
-    while n1 > 0 {
-        if n1 > f1 {
+    while n1 > 0 && n2 > 0 {
+        let mut d = 1;
+
+        while d <= n1 && less(&*s2.add(n2 - 1), &*s1.add(n1 - d)) {
+            d *= 2;
+        }
+
+        let mut l = n1.saturating_sub(d - 1);
+        l += search_right(s1.add(l), n1 - d / 2 - l, s2.add(n2 - 1), less);
+
+        while n1 > l {
             dst_rev = dst_rev.sub(1);
             n1 -= 1;
             hole.cycle(s1.add(n1), dst_rev);
-            continue;
         }
 
-        if n1 == bucket {
-            bucket -= gap;
-        } else {
-            dst_rev = dst_rev.sub(1);
-            n2 -= 1;
-            hole.cycle(s2.add(n2), dst_rev);
-
-            if n2 == 0 {
-                break;
-            }
-        }
-
-        f1 = bucket;
-
-        if !less(&*s2.add(n2 - 1), &*s1.add(bucket)) {
-            f1 += 1 + search_right(s1.add(bucket + 1), n1 - bucket - 1, s2.add(n2 - 1), less);
-        }
+        dst_rev = dst_rev.sub(1);
+        n2 -= 1;
+        hole.cycle(s2.add(n2), dst_rev);
     }
 
     drop(hole);
-    end_merge(dst, conditional(s1, s2, n2 > 0), n1 | n2);
+
+    if n2 > 0 {
+        cycle_swap(dst, s2, n2);
+    }
 }
 
 /// Try to merge runs `s..s + n1` and `s + n1..s + n1 + n2` using an adaptive merge.
@@ -221,13 +205,13 @@ pub unsafe fn merge<T, F: Less<T>>(
     if rad > (n1 - rad) / RATIO_BIN_MERGE {
         merge_left(s, n1 - rad, s.add(n1), rad, s, less);
     } else {
-        binary_merge_left(s, n1 - rad, s.add(n1), rad, s, less);
+        exponential_merge_left(s, n1 - rad, s.add(n1), rad, s, less);
     }
 
     if rad > (n2 - rad) / RATIO_BIN_MERGE {
         merge_right(buf.start, rad, s.add(n1 + rad), n2 - rad, s.add(n1), less);
     } else {
-        binary_merge_right(buf.start, rad, s.add(n1 + rad), n2 - rad, s.add(n1), less);
+        exponential_merge_right(buf.start, rad, s.add(n1 + rad), n2 - rad, s.add(n1), less);
     }
 
     true

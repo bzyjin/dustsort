@@ -3,7 +3,7 @@ use core::ptr;
 use crate::{
     buffer::Buffer,
     dust::RATIO_BIN_MERGE,
-    merge::{binary_merge_left, merge_lazy, merge_left, merge_right},
+    merge::{exponential_merge_left, merge_lazy, merge_left, merge_right},
     util::{block_swap_length, conditional, insert_left, search_left, search_right, Less},
 };
 
@@ -125,7 +125,7 @@ unsafe fn local_merge<T, F: Less<T>>(
         if rad > (n1 - rad) / RATIO_BIN_MERGE {
             merge_left(s.add(n1), rad, s, n1 - rad, s, less);
         } else {
-            binary_merge_left(s, n1 - rad, s.add(n1), rad, s, &mut |x, y| !less(y, x));
+            exponential_merge_left(s, n1 - rad, s.add(n1), rad, s, &mut |x, y| !less(y, x));
         }
 
         merge_right(s.add(n1 + rad), n2 - rad, buf.start, rad, s.add(n1), less)
@@ -140,7 +140,7 @@ unsafe fn local_merge<T, F: Less<T>>(
         if rad > (n1 - rad) / RATIO_BIN_MERGE {
             merge_left(s, n1 - rad, s.add(n1), rad, s, less);
         } else {
-            binary_merge_left(s, n1 - rad, s.add(n1), rad, s, less);
+            exponential_merge_left(s, n1 - rad, s.add(n1), rad, s, less);
         }
 
         merge_right(buf.start, rad, s.add(n1 + rad), n2 - rad, s.add(n1), less)
