@@ -52,6 +52,6 @@ Benchmarks of the Rust implementation are in progress. Its performance may also 
 ## Attributions
 
 Thanks to:
-- [@amari-calipso](https://github.com/amari-calipso) for inspiration (Helium Sort) and for suggesting to improve key collection
+- [@amari](https://git.a-a.dev/amari/) for inspiration (Helium Sort) and for suggesting to improve key collection
 - [@aphitorite](https://github.com/aphitorite) and [Control](https://github.com/Control55) for discussions on the key collection algorithm
 - [@Morwenn](https://github.com/Morwenn) for a great article on [measures of disorder](https://morwenn.github.io/presortedness/2025/06/15/TSB001-amp-a-new-measure-of-presortedness.html)
