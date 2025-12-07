@@ -280,7 +280,7 @@ pub unsafe fn sort<T, F: Less<T>>(s: *mut T, n: usize, less: &mut F) {
             run /= 2;
         }
 
-        frag %= run;
+        frag &= run - 1;
         merge(&mut buf, s.add(l - frag), frag, cur.min(run - frag), less);
 
         l += cur;
